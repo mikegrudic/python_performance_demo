@@ -56,7 +56,7 @@ def nbody_accel(masses, coordinates, G=1.):
             for k in range(3):
                 dx = coordinates[j,k] - coordinates[i,k]
                 distance += dx*dx
-            if distance == 0: continue # just 
+            if distance == 0: continue # just skip if points lie on top of each other
             distance = np.sqrt(distance)
 
             # now compute the acceleration
@@ -133,7 +133,7 @@ def nbody_accel_numba(masses, coordinates, G=1.):
             for k in range(3):
                 dx = coordinates[j,k] - coordinates[i,k]
                 distance += dx*dx
-            if distance == 0: continue # just 
+            if distance == 0: continue # just skip if points lie on top of each other
             distance = np.sqrt(distance)
 
             # now compute the acceleration
@@ -185,7 +185,7 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
             for k in range(3):
                 dx = coordinates[j,k] - coordinates[i,k]
                 distance += dx*dx
-            if distance == 0: continue # just 
+            if distance == 0: continue # just skip if points lie on top of each other
             distance = np.sqrt(distance)
 
             # now compute the acceleration
