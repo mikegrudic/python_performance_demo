@@ -41,7 +41,7 @@ def nbody_accel(masses, coordinates, G=1.):
 
     Returns
     -------
-    accel:
+    accel: ndarray
         Shape (N,3) array containing the gravitational acceleration experienced
         by each point-mass
     """
@@ -78,7 +78,7 @@ One way to test the performance of a function is to use the `%timeit` magic, whi
 %timeit nbody_accel(masses,coordinates)
 ```
 
-    4.86 s ± 113 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    7.46 s ± 83 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Oh shit that took forever didn't it? And that's just for 1000 masses - imagine if we had to simulate a Milky Way of ~10^11 masses! It would take (10^11/10^3)^2 = 10^16 times longer! Who's got time for that?
@@ -92,7 +92,7 @@ What's taking so long? One way to get a breakdown of which lines in your functio
 
 We see that there is no single line that takes the vast majority of the time, so optimizing this line-by-line could be time-consuming.
 
-**Exercise**: How much can you optimize the above function just by rearranging the way the loop is structured and the floating-point calculations are carried out? (there should be a factor of ~2 on the table)
+**Exercise**: How much can you optimize the above function just by rearranging the way the loop is structured and the floating-point calculations are carried out? (there should be a factor of ~2 on the table). 
 
 But the reason for the low performance is more fundamental: explicit indexed loop operations like this have a huge amount of overhead when running natively in the Python interpreter. Much of python's flexibility comes with a trade-off for performance, so pure-python numerical code like this will almost always be outperformed by a compiled language like C++ or Fortran.
 
@@ -153,11 +153,11 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit
 
 
-    5.91 ms ± 421 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    9.04 ms ± 114 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Note the factor of ~1000 speedup, obtained by fundamentally changing the way the code gets transformed into instructions! 
@@ -213,11 +213,11 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit(fastmath=True)
 
 
-    5.19 ms ± 531 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    6.91 ms ± 85.1 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 # Parallelism
@@ -274,15 +274,15 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit(fastmath=True,parallel=True)
 
 
-    864 µs ± 140 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    1.41 ms ± 221 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 # Other options for optimization
 
-There are many other ways to write performant python code than just the numba parallel CPU coding we have done here. [numba also supports running on the GPU](https://numba.readthedocs.io/en/stable/cuda/index.html). [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations.
+There are many other ways to write performant python code than just the numba parallel CPU coding we have done here. Any python code can in principle be parallelized using python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html). [joblib](https://joblib.readthedocs.io/en/stable/) offers functionality for parallelism with a different implementation.  [numba also supports running code on the GPU](https://numba.readthedocs.io/en/stable/cuda/index.html). [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations. [mpi4py](https://mpi4py.readthedocs.io/en/stable/mpi4py.html) implements MPI (Message Passing Interface) for programs that may need to run distributed across multiple computers (i.e. supercomputers). The best choice will depend on your particular problem and requirements.
 
 Python may still have a reputation for being slow, but the reality is that in many cases the time-to-solution (coding+computation) for a give project can be shorter, just by taking advantage of Python's extensive community library support while optimizing the most numerically-intensive parts as we have here.
