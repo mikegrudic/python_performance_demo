@@ -78,7 +78,7 @@ One way to test the performance of a function is to use the `%timeit` magic, whi
 %timeit nbody_accel(masses,coordinates)
 ```
 
-    7.46 s ± 83 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    5.14 s ± 180 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Oh shit that took forever didn't it? And that's just for 1000 masses - imagine if we had to simulate a Milky Way of ~10^11 masses! It would take (10^11/10^3)^2 = 10^16 times longer! Who's got time for that?
@@ -153,11 +153,11 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit
 
 
-    9.04 ms ± 114 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    8.82 ms ± 520 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Note the factor of ~1000 speedup, obtained by fundamentally changing the way the code gets transformed into instructions! 
@@ -213,11 +213,11 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit(fastmath=True)
 
 
-    6.91 ms ± 85.1 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    7.13 ms ± 441 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 # Parallelism
@@ -274,11 +274,11 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95055/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
       @jit(fastmath=True,parallel=True)
 
 
-    1.41 ms ± 221 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    1.11 ms ± 218 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 # Other options for optimization
