@@ -2,6 +2,7 @@
 
 Python code has a reputation for being slower than other programming languages, and that is often well-deserved. But we will see here that there are ways to make your python code run orders-of-magnitude faster with relatively little extra work.
 
+
 ```python
 import numpy as np
 %load_ext line_profiler
@@ -9,8 +10,8 @@ import numpy as np
 
 For our problem let's assume we have a collection of point-masses, each with its own 3D coordinates, and we wish to know the gravitational acceleration exerted on each of the masses. This is requied e.g. for performing N-body simulations of planetary systems, star clusters, galaxies, and dark matter structure.
 
-
 # Initialization
+
 
 ```python
 num_particles = 10**3 # number of particles
@@ -21,6 +22,7 @@ coordinates = np.random.normal(size=(num_particles,3)) # particle positions chos
 Let's code a typical Numpy function that will compute the N-body gravitational acceleration. We will start as simple as possible while working within the numpy paradigm for arrays and docstrings, and explicitly writing out the loop operations.
 
 ## Naïve implementation
+
 
 ```python
 def nbody_accel(masses, coordinates, G=1.):
@@ -71,13 +73,18 @@ def nbody_accel(masses, coordinates, G=1.):
 
 One way to test the performance of a function is to use the `%timeit` magic, which will run the function repeatedly and give you an average of how long it took.
 
+
 ```python
 %timeit nbody_accel(masses,coordinates)
 ```
 
+    4.86 s ± 113 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
 Oh shit that took forever didn't it? And that's just for 1000 masses - imagine if we had to simulate a Milky Way of ~10^11 masses! It would take (10^11/10^3)^2 = 10^16 times longer! Who's got time for that?
 
 What's taking so long? One way to get a breakdown of which lines in your function are taking the most time is with the `%lprun` magic provided by the `line_profiler` package
+
 
 ```python
 %lprun -f nbody_accel nbody_accel(masses, coordinates)
@@ -91,10 +98,10 @@ But the reason for the low performance is more fundamental: explicit indexed loo
 
 Is there a way to get around this?
 
-
 # Numba
 
 Numba performs JIT (just-in-time) compilation of your numerical Python code so that it is possible in theory to obtain performance equal to compiled languages. The simplest way to use it is just to put a `@jit` decordator on your function.
+
 
 ```python
 from numba import jit
@@ -146,9 +153,17 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+      @jit
+
+
+    5.91 ms ± 421 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
 Note the factor of ~1000 speedup, obtained by fundamentally changing the way the code gets transformed into instructions! 
 
 We can get a little more performance by adding the `fastmath=True` argument, which relaxes the requirement that floating-point operations be performed according to the standard spec. This is usually fine, but **always test your function's accuracy to make sure it calculates the result to desired accuracy**
+
 
 ```python
 @jit(fastmath=True)
@@ -198,8 +213,16 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+      @jit(fastmath=True)
+
+
+    5.19 ms ± 531 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
+
 # Parallelism
 There is even more performance on the table here: your computer has **multiple** processors, and so far we have just been using only one. The easiest way to parallelize this is to run the outer loop in parallel using `prange`, and tell numba to use it with `parallel=True`
+
 
 ```python
 from numba import prange
@@ -250,6 +273,13 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
+
+    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_92326/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
+      @jit(fastmath=True,parallel=True)
+
+
+    864 µs ± 140 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
 
 # Other options for optimization
 
