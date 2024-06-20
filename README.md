@@ -1,17 +1,3 @@
----
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.16.2
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
 # Optimization and performance in Python
 
 Python code has a reputation for being slower than other programming languages, and that is often well-deserved. But we will see here that there are ways to make your python code run orders-of-magnitude faster with relatively little extra work.
