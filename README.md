@@ -90,6 +90,59 @@ What's taking so long? One way to get a breakdown of which lines in your functio
 %lprun -f nbody_accel nbody_accel(masses, coordinates)
 ```
 
+```
+Timer unit: 1e-06 s
+
+Total time: 24.1356 s
+File: <ipython-input-3-1a5f7a885e4f>
+Function: nbody_accel at line 1
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+     1                                           def nbody_accel(masses, coordinates, G=1.):
+     2                                               """
+     3                                               Computes the Newtontian gravitational acceleration exerted on each of a set
+     4                                               of point masses.
+     5                                           
+     6                                               Parameters
+     7                                               ----------
+     8                                               masses: array_like
+     9                                                   Shape (N,) array of masses
+    10                                               coordinates: array_like
+    11                                                   Shape (N,3) array of coordinates
+    12                                               G: float, optional
+    13                                                   Value of Newton's gravitational constant (default to 1)
+    14                                           
+    15                                               Returns
+    16                                               -------
+    17                                               accel: ndarray
+    18                                                   Shape (N,3) array containing the gravitational acceleration experienced
+    19                                                   by each point-mass
+    20                                               """
+    21                                           
+    22                                               # first declare the array that will store the acceleration
+    23         1        183.0    183.0      0.0      accel = np.zeros_like(coordinates) # array of zeros shaped like coordinate (N,3)
+    24         1          3.0      3.0      0.0      N = coordinates.shape[0] # number of particles
+    25                                           
+    26      1001        721.0      0.7      0.0      for i in range(N):
+    27   1001000     533501.0      0.5      2.2          for j in range(N):
+    28   1000000     555480.0      0.6      2.3              if i==j: continue # self-force is 0
+    29                                                       # first need to calculate the distance between i and j
+    30    999000     518899.0      0.5      2.1              distance = 0.
+    31   3996000    2554522.0      0.6     10.6              for k in range(3):
+    32   2997000    3466373.0      1.2     14.4                  dx = coordinates[j,k] - coordinates[i,k]
+    33   2997000    2305378.0      0.8      9.6                  distance += dx*dx
+    34    999000     659161.0      0.7      2.7              if distance == 0: continue # just skip if points lie on top of each other
+    35    999000    2183010.0      2.2      9.0              distance = np.sqrt(distance)
+    36                                           
+    37                                                       # now compute the acceleration
+    38   3996000    2678010.0      0.7     11.1              for k in range(3):
+    39   2997000    3421611.0      1.1     14.2                  dx = coordinates[j,k] - coordinates[i,k]
+    40   2997000    5258707.0      1.8     21.8                  accel[i,k] += G * masses[j] * dx / distance**3
+    41                                           
+    42         1          1.0      1.0      0.0      return accel
+```
+
 We see that there is no single line that takes the vast majority of the time, so optimizing this line-by-line could be time-consuming.
 
 **Exercise**: How much can you optimize the above function just by rearranging the way the loop is structured and the floating-point calculations are carried out? (there should be a factor of ~2 on the table). 
