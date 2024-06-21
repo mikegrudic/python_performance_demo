@@ -206,8 +206,6 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/309808660.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
-      @jit
 
 
     8.82 ms ± 520 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
@@ -266,8 +264,6 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/1027182532.py:1: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
-      @jit(fastmath=True)
 
 
     7.13 ms ± 441 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
@@ -327,8 +323,7 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
 
-    /var/folders/h1/4vzhdl0j21q2tk7dy4cyzbxc0000gn/T/ipykernel_95228/521207335.py:3: NumbaDeprecationWarning: [1mThe 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.[0m
-      @jit(fastmath=True,parallel=True)
+
 
 
     1.11 ms ± 218 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
@@ -336,6 +331,6 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 
 # Other options for optimization
 
-There are many other ways to write performant python code than just the numba parallel CPU coding we have done here. Any python code can in principle be parallelized using python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html). [joblib](https://joblib.readthedocs.io/en/stable/) offers functionality for parallelism with a different implementation.  [numba also supports running code on the GPU](https://numba.readthedocs.io/en/stable/cuda/index.html). [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations. [mpi4py](https://mpi4py.readthedocs.io/en/stable/mpi4py.html) implements MPI (Message Passing Interface) for programs that may need to run distributed across multiple computers (i.e. supercomputers). The best choice will depend on your particular problem and requirements.
+There are many other ways to write performant python code than just the numba parallel CPU coding we have done here. We have only looked at two common tricks for speeding up numba code, but there are [many others](https://numba.readthedocs.io/en/stable/user/performance-tips.html). Any python code can in principle be parallelized using python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html). [joblib](https://joblib.readthedocs.io/en/stable/) offers functionality for parallelism with a different implementation.  [numba also supports running code on the GPU](https://numba.readthedocs.io/en/stable/cuda/index.html). [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations. [mpi4py](https://mpi4py.readthedocs.io/en/stable/mpi4py.html) implements MPI (Message Passing Interface) for programs that may need to run distributed across multiple computers (i.e. supercomputers). The best choice will depend on your particular problem and requirements.
 
 Python may still have a reputation for being slow, but the reality is that in many cases the time-to-solution (coding+computation) for a give project can be shorter, just by taking advantage of Python's extensive community library support while optimizing the most numerically-intensive parts as we have here.
