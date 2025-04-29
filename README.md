@@ -621,7 +621,7 @@ vec.x, vec.y, vec.norm, (vec+vec).x, (vec+vec).y, vec.dot(vec)
 
 There are many other ways to write performant python code than just the numba parallel CPU coding we have done here.
 - We have overlooked numpy's native vectorized routines; quite often these result in more-expressive and readable numerical code, and use tuned and optimized libraries for performance. If your algorithm can be written this way, you should consider it.
-- Any python code can in principle be parallelized using python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html).
+- python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html).
 - [numba also supports running code on Nvidia GPUs](https://numba.readthedocs.io/en/stable/cuda/index.html).
 - [joblib](https://joblib.readthedocs.io/en/stable/) offers functionality for parallelism with a different implementation.
 - [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations.
