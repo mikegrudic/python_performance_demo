@@ -19,7 +19,7 @@ For our problem let's assume we have a collection of $N$ point-masses $m_i$, eac
 At the position $\mathbf{x}_{i}$ of each particle **i**, we wish to compute
 
 $$
-\mathbf{g}_{i} = \sum_{i \neq j} G m_j \frac{\mathbf{x}_i - \mathbf{x}_j}{\|\mathbf{x}_i - \mathbf{x}_j\|^3}
+\mathbf{g}_{i} = \sum_{i \neq j} G m_j \frac{\mathbf{x}_j - \mathbf{x}_i}{\|\mathbf{x}_i - \mathbf{x}_j\|^3}
 $$
 
 ### Initialization
@@ -97,7 +97,7 @@ One way to test the performance of a function is to use the `%timeit` magic, whi
 %timeit nbody_accel(masses,coordinates)
 ```
 
-    4.17 s ± 12.2 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    4.12 s ± 15.5 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 That took forever.
@@ -179,7 +179,7 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    6.73 ms ± 83.8 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    6.75 ms ± 95.5 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Note the factor of ~1000 speedup, obtained by fundamentally changing the way the code gets transformed into instructions! 
@@ -192,7 +192,7 @@ nbody_accel_numba = jit(nbody_accel)
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    6.76 ms ± 28.5 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    6.72 ms ± 48.4 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
 
 ### Fancy optimizations: fast math
@@ -253,7 +253,7 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
-    5.34 ms ± 23.1 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    5.36 ms ± 38.6 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
 
 This provided a modest speedup. We can make sure we are getting the same result:
@@ -347,7 +347,7 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
 
-    832 μs ± 158 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    685 μs ± 19.6 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 
@@ -489,16 +489,16 @@ def nbody_accel_nearest(masses, coordinates, num_neighbors, G=1.):
 %timeit nbody_accel_nearest(masses, coordinates, 16)
 ```
 
-    /tmp/ipykernel_345291/1044257097.py:5: NumbaWarning: 
+    /tmp/ipykernel_397202/1044257097.py:5: NumbaWarning: 
     Compilation is falling back to object mode WITHOUT looplifting enabled because Function "nbody_accel_nearest" failed type inference due to: Untyped global name 'tree': Cannot determine Numba type of <class 'scipy.spatial._kdtree.KDTree'>
     
-    File "../../../../../tmp/ipykernel_345291/1044257097.py", line 32:
+    File "../../../../../tmp/ipykernel_397202/1044257097.py", line 32:
     <source missing, REPL/exec in use?>
     
       @jit(forceobj=True)
 
 
-    119 ms ± 507 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    127 ms ± 1.33 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 We can see that this ran successfully, but kinda slow, especially considering that we are only evaluating $N_{\rm ngb} N$ forces now. Typically, embedding object-mode Python calls in loops that would otherwise be JIT'd will incur a performance cost.
@@ -565,7 +565,7 @@ def nbody_accel_nearest(masses, coordinates, num_neighbors, G=1.):
 %timeit nbody_accel_nearest(masses, coordinates, 16)
 ```
 
-    30.2 ms ± 195 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    36.9 ms ± 214 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 This was a little faster for some reason.
