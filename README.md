@@ -97,7 +97,7 @@ One way to test the performance of a function is to use the `%timeit` magic, whi
 %timeit nbody_accel(masses,coordinates)
 ```
 
-    4.12 s ± 15.5 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    4.08 s ± 23.9 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 That took forever.
@@ -179,7 +179,7 @@ def nbody_accel_numba(masses, coordinates, G=1.):
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    6.75 ms ± 95.5 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    6.69 ms ± 230 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Note the factor of ~1000 speedup, obtained by fundamentally changing the way the code gets transformed into instructions! 
@@ -192,7 +192,7 @@ nbody_accel_numba = jit(nbody_accel)
 %timeit nbody_accel_numba(masses,coordinates)
 ```
 
-    6.72 ms ± 48.4 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    6.78 ms ± 47.2 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
 
 ### Fancy optimizations: fast math
@@ -253,7 +253,7 @@ def nbody_accel_numba_fastmath(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath(masses, coordinates)
 ```
 
-    5.36 ms ± 38.6 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    5.27 ms ± 49.4 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 This provided a modest speedup. We can make sure we are getting the same result:
@@ -347,7 +347,7 @@ def nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.):
 %timeit nbody_accel_numba_fastmath_parallel(masses, coordinates, G=1.)
 ```
 
-    685 μs ± 19.6 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    728 μs ± 151 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 
@@ -489,16 +489,16 @@ def nbody_accel_nearest(masses, coordinates, num_neighbors, G=1.):
 %timeit nbody_accel_nearest(masses, coordinates, 16)
 ```
 
-    /tmp/ipykernel_397202/1044257097.py:5: NumbaWarning: 
+    /tmp/ipykernel_405007/1044257097.py:5: NumbaWarning: 
     Compilation is falling back to object mode WITHOUT looplifting enabled because Function "nbody_accel_nearest" failed type inference due to: Untyped global name 'tree': Cannot determine Numba type of <class 'scipy.spatial._kdtree.KDTree'>
     
-    File "../../../../../tmp/ipykernel_397202/1044257097.py", line 32:
+    File "../../../../../tmp/ipykernel_405007/1044257097.py", line 32:
     <source missing, REPL/exec in use?>
     
       @jit(forceobj=True)
 
 
-    127 ms ± 1.33 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    124 ms ± 197 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 We can see that this ran successfully, but kinda slow, especially considering that we are only evaluating $N_{\rm ngb} N$ forces now. Typically, embedding object-mode Python calls in loops that would otherwise be JIT'd will incur a performance cost.
@@ -565,7 +565,7 @@ def nbody_accel_nearest(masses, coordinates, num_neighbors, G=1.):
 %timeit nbody_accel_nearest(masses, coordinates, 16)
 ```
 
-    36.9 ms ± 214 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    31.2 ms ± 118 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 This was a little faster for some reason.
@@ -620,8 +620,9 @@ vec.x, vec.y, vec.norm, (vec+vec).x, (vec+vec).y, vec.dot(vec)
 # Other options for fast and parallel python
 
 There are many other ways to write performant python code than just the numba parallel CPU coding we have done here.
-- [numba also has aCUDA  API for running  Nvidia GPUs](https://numba.readthedocs.io/en/stable/cuda/index.html). Simple reductions and ufuncs are easy; more-complex custom kernels require some skill to get performance out of. As always with CUDA, **don't write your own kernel if a standard algorithm is available**
-- Python has native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html).
+- We have overlooking numpy's native vectorized routines; quite often these result in more-expressive and readable numerical code, and use tuned and optimized libraries for performance. If your algorithm can be written this way, you should consider it.
+- Any python code can in principle be parallelized using python's native [multiprocessing](https://docs.python.org/3/library/multiprocessing.html).
+- [numba also supports running code on Nvidia GPUs](https://numba.readthedocs.io/en/stable/cuda/index.html).
 - [joblib](https://joblib.readthedocs.io/en/stable/) offers functionality for parallelism with a different implementation.
 - [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) is best known for its use in machine learning but is also more broadly useful for coding GPU-portable python code consisting of function compositions and array operations.
 - [mpi4py](https://mpi4py.readthedocs.io/en/stable/mpi4py.html) implements MPI (Message Passing Interface) for distributed execution.
@@ -629,3 +630,51 @@ There are many other ways to write performant python code than just the numba pa
 The best choice will depend on your particular problem and requirements.
 
 Python may still have a reputation for being slow, but the reality is that in many cases the time-to-solution (coding+computation) for a give project can be shorter, just by taking advantage of Python's extensive community library support while optimizing the most numerically-intensive parts as we have here.
+
+### numpy vectorized implementation
+
+Here is a maximally-concise vectorized numpy implementation. It is significantly faster than native Python looping. Beware: it has a huge memory footprint because it realizes all N^2 coordinate differences.
+
+
+```python
+from scipy.spatial.distance import cdist
+
+def nbody_accel_numpy_vectorized(masses, coordinates, G=1.0):
+    dx = coordinates[:,None] - coordinates[None,:] # outer product to get the NxNx3 array of coordinate differences - BAD for large N!!!!
+    dist = np.sqrt(np.sum(dx*dx,axis=-1)) # dot products to get distances
+    dist[dist==0] = np.inf # hack to zero out the self-force
+    return np.sum(masses[:,None,None] * dx / dist[:,:,None]**3,axis=0) # sum over 'j' to get forces
+
+%timeit nbody_accel_numpy_vectorized(masses, coordinates)
+```
+
+    54.2 ms ± 58.1 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+### JAX Implementation
+Here is an implementation of the N-body force function by Philip Mocz
+
+
+```python
+import jax, jax.numpy as jnp
+
+@jax.jit
+def nbody_accel_jax_vectorized(masses, coordinates, G=1.0):
+
+    def compute_accel(i, _):
+        xi = coordinates[i]
+        dx = coordinates - xi
+        distances = jnp.sqrt(jnp.sum(dx**2, axis=1))
+        distances = jnp.where(distances == 0, 1.0, distances)  # Replace 0 with 1.0 to avoid division by zero
+        forces = G * masses[:, None] * dx / distances[:, None]**3
+        return jnp.sum(forces, axis=0)
+
+    N = coordinates.shape[0]
+    accel = jax.vmap(compute_accel)(jnp.arange(N), None)
+    return accel
+
+%timeit nbody_accel_jax_vectorized(masses, coordinates)
+```
+
+    171 μs ± 64 μs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+
